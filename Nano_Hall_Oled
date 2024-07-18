@@ -1,0 +1,50 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET    -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+const int hallPin = A0;
+const int ledPin = 8;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW); // Start with the LED off
+  
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // 0x3C is the I2C address for most SSD1306 displays
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  display.display();
+  delay(2000); // Pause for 2 seconds
+  
+  display.clearDisplay();
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE); // Draw white text
+}
+
+void loop() {
+  int sensorValue = analogRead(hallPin);
+  float voltage = sensorValue * (5.0 / 1023.0);
+  displayVoltage(voltage);
+  
+  if (sensorValue < 512) { // Adjust threshold as needed
+    digitalWrite(ledPin, HIGH); // Turn LED on when magnet is close
+  } else {
+    digitalWrite(ledPin, LOW); // Turn LED off when magnet is away
+  }
+  
+  delay(100);
+}
+
+void displayVoltage(float voltage) {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Voltage: ");
+  display.setCursor(0, 32);
+  display.print(voltage, 2); // Display voltage with 2 decimal places
+  display.display();
+}
